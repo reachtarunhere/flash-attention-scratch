@@ -2,6 +2,8 @@ import torch
 import torch.nn as nn
 import math
 
+torch.set_default_device("cuda:0")
+
 class FlashAttention2Function(torch.autograd.Function):
     """
     A pure PyTorch implementation of the FlashAttention-2 forward pass.
@@ -58,15 +60,40 @@ class FlashAttention2Function(torch.autograd.Function):
                         # --- STUDENT IMPLEMENTATION REQUIRED HERE ---
                         # 1. Apply causal masking if is_causal is True.
                         #
+                        if is_causal:
+                            q_range = torch.arange(q_start, q_end).reshape(-1, 1)
+                            k_range = torch.arange(k_start, k_end)
+                            S_ij = torch.where(k_range <= q_range, S_ij, -math.inf)
+
+
+                        # S_ij = S_ij + mask
+                        
                         # 2. Compute the new running maximum
                         #
+
+                        m_local = S_ij.max(dim=-1)[0]
+                        m_new = torch.where(m_local > m_i, m_local, m_i)
+                        
                         # 3. Rescale the previous accumulators (o_i, l_i)
-                        #
+                        scale_factor = torch.exp(m_i - m_new)
+                        prev_l_scaled = l_i * scale_factor
+                        prev_o_scaled = o_i * scale_factor.reshape(-1, 1)
+                        
                         # 4. Compute the probabilities for the current tile, P_tilde_ij = exp(S_ij - m_new).
                         #
+
+                        P_tilde_ij = torch.exp(S_ij - m_new.reshape(-1, 1))
+                        
                         # 5. Accumulate the current tile's contribution to the accumulators to update l_i and o_i
+                        l_local = P_tilde_ij.sum(1)
+                        l_i = prev_l_scaled + l_local
+                        o_local = P_tilde_ij.to(torch.bfloat16) @ V_tile
+
+                        o_i = prev_o_scaled + o_local
+                        
                         #
                         # 6. Update the running max for the next iteration
+                        m_i = m_new
                         
                         # --- END OF STUDENT IMPLEMENTATION ---
 
@@ -91,3 +118,6 @@ class FlashAttention2Function(torch.autograd.Function):
     @staticmethod
     def backward(ctx, grad_out, grad_L):
         raise NotImplementedError("Backward pass not yet implemented for FlashAttention2Function")
+
+
+# Big lesson learned you don't need to divide by denom for O at every step 
