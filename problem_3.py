@@ -83,7 +83,7 @@ def _flash_attention_forward_kernel(
              
     tl.store(o_ptrs, acc.to(O_ptr.dtype.element_ty), mask=q_offsets[:, None] < SEQ_LEN)
 
-def flash_attention_forward(q, k, v):
+def flash_attention_forward(q, k, v, is_causal=False):
     """
     Minimal Python wrapper for the FlashAttention-2 forward pass.
     """
