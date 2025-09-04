@@ -16,47 +16,49 @@ def weighted_row_sum_kernel(
     """
     # 1. Get the row index for the current program instance.
     #    Hint: Use tl.program_id(axis=0).
-    row_idx = ...
+    row_idx = tl.program_id(axis=0)
 
     # 2. Create a pointer to the start of the current row in the input tensor X.
     #    Hint: The offset depends on the row index and the number of columns (N_COLS).
-    row_start_ptr = ...
+    row_start_ptr = X_ptr + row_idx * N_COLS
     
     # 3. Create a pointer for the output vector Y.
-    output_ptr = ...
+    output_ptr = Y_ptr + row_idx * N_COLS
 
     # 4. Initialize an accumulator for the sum of the products for a block.
     #    This should be a block-sized tensor of zeros.
     #    Hint: Use tl.zeros with shape (BLOCK_SIZE,) and dtype tl.float32.
-    accumulator = ...
+    accumulator = tl.zeros((BLOCK_SIZE,), dtype=tl.float32)
 
     # 5. Iterate over the columns of the row in blocks of BLOCK_SIZE.
     #    Hint: Use a for loop with tl.cdiv(N_COLS, BLOCK_SIZE).
-    for col_block_start in range(0, ...):
+    for col_block_start in range(0, tl.cdiv(N_COLS, BLOCK_SIZE)):
         # - Calculate the offsets for the current block of columns.
         #   Hint: Start from the block's beginning and add tl.arange(0, BLOCK_SIZE).
-        col_offsets = ...
+        col_offsets = col_block_start * BLOCK_SIZE + tl.arange(0, BLOCK_SIZE)
         
         # - Create a mask to prevent out-of-bounds memory access for the last block.
         #   Hint: Compare col_offsets with N_COLS.
-        mask = ...
+        mask = col_offsets < N_COLS
         
         # - Load a block of data from X and W safely using the mask.
         #   Hint: Use tl.load with the appropriate pointers, offsets, and mask.
         #   Use `other=0.0` to handle out-of-bounds elements.
-        x_chunk = tl.load(...)
-        w_chunk = tl.load(...)
+        x_chunk = tl.load(row_start_ptr + col_offsets, mask=mask, other=0.0)
+        w_chunk = tl.load(W_ptr + col_offsets, mask=mask, other=0.0)
         
         # - Compute the element-wise product and add it to the accumulator.
-        accumulator += ...
+        accumulator += x_chunk * w_chunk
+        # wait why not just dot these here huh?
         
     # 6. Reduce the block-sized accumulator to a single scalar value after the loop.
     #    Hint: Use tl.sum().
-    final_sum = ...
+    final_sum = tl.sum(accumulator)
 
     # 7. Store the final accumulated sum to the output tensor Y.
     #    Hint: Use tl.store().
-    ...
+    tl.store(Y_ptr + row_idx, final_sum)
+    # ...
     
 # --- END OF STUDENT IMPLEMENTATION ---
 
