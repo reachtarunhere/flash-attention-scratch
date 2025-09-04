@@ -1,7 +1,11 @@
+# import os
+# os.environ['TRITON_INTERPRET'] = '1'
+
 import torch
 import triton
 import triton.language as tl
 import math
+
 
 @triton.jit
 def _flash_attention_forward_kernel(
@@ -29,7 +33,6 @@ def _flash_attention_forward_kernel(
     
     batch_idx = batch_head_idx // N_HEADS
     head_idx = batch_head_idx % N_HEADS
-
     # 2. Initialize pointers and accumulators for the online softmax.
     m_i = tl.full([BLOCK_M], -float('inf'), dtype=tl.float32)
     l_i = tl.zeros([BLOCK_M], dtype=tl.float32)
@@ -64,12 +67,29 @@ def _flash_attention_forward_kernel(
         # --- STUDENT IMPLEMENTATION REQUIRED HERE ---
         # Implement the online softmax update logic.
         # 1. Find the new running maximum (`m_new`).
+        # import ipdb
+        # ipdb.set_trace()
+        m_local = s_ij.max(axis=-1)
+        m_new = tl.where(m_local > m_i, m_local, m_i)
+
         # 2. Rescale the existing accumulator (`acc`) and denominator (`l_i`).
+        scale_factor = tl.exp2(m_i - m_new)
+        l_scaled = l_i * scale_factor
+        acc_scaled = acc * scale_factor.expand_dims(1)
+        
         # 3. Compute the attention probabilities for the current tile (`p_ij`).
+
+        # unnormalized scores
+        p_ij = tl.exp2(s_ij - m_new.expand_dims(1))
+        
         # 4. Update the accumulator `acc` using `p_ij` and `v_block`.
+
+        acc = acc_scaled + tl.dot(p_ij.to(tl.bfloat16), v_block)
+        
         # 5. Update the denominator `l_i`.
+        l_i = l_scaled + p_ij.sum(axis=1)
         # 6. Update the running maximum `m_i` for the next iteration.
-        pass
+        m_i = m_new
         # --- END OF STUDENT IMPLEMENTATION ---
 
 
@@ -106,3 +126,8 @@ def flash_attention_forward(q, k, v, is_causal=False):
         BLOCK_N=BLOCK_N,
     )
     return o
+
+
+if __name__ == '__main__':
+    q = torch.randn((2, 4, 512, 64))
+    flash_attention_forward(q, q, q,)
