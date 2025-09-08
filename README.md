@@ -93,6 +93,7 @@ GStar/
 ├── problem_8.py             # Optional: GQA Backward Pass (BONUS CHALLENGE)
 ├── problem_9.py             # Optional: GQA + SWDA + Attention Sinks Backward Pass (MORE CHALLENGE)
 ├── autograder.py            # Automated testing and benchmarking
+├── autograder_optional.py   # Autograder for Stages 8 & 9
 └── .gitignore              # Git ignore file
 ```
 
@@ -127,32 +128,23 @@ python autograder.py --p1
 
 Your implementation journey is guided by a comprehensive autograder that validates correctness and measures performance against reference implementations.
 
-### Stage-by-Stage Testing
+### Stage-by-Stage Testing (Problems 1–7)
 
-#### Test Stage 1: PyTorch Foundation
 ```bash
-python autograder.py --p1
+python autograder.py --p1   # PyTorch baseline
+python autograder.py --p2   # First Triton kernel
+python autograder.py --p3   # FlashAttention (non-causal)
+python autograder.py --p4   # FlashAttention (causal)
+python autograder.py --p5   # Flash Group Query Attention
+python autograder.py --p6   # Flash Group Query Attention + Sliding Window Attention
+python autograder.py --p7   # Flash Group Query Attention + Sliding Window Attention & Attention Sinks
 ```
-Validates your Flash Attention algorithm against the mathematical ground truth.
 
-#### Test Stage 2: First Kernel
+#### Optional Challenges (Problems 8–9)
 ```bash
-python autograder.py --p2
+python autograder_optional.py --p8   # Backward pass for GQA
+python autograder_optional.py --p9   # Backward pass for GQA + SWA + Attention Sinks
 ```
-Checks your Triton kernel produces correct weighted row sums.
-
-#### Test Stage 3: Correctness & Performance
-```bash
-# Verify correctness and automatically benchmark performance (the moment of truth!)
-python autograder.py --p3
-```
-Your Triton Flash Attention should be both correct and fast.
-
-### Test Stage 4 -> Stage 7 should be similar
-
-#### 🎯 Optional Challenge Testing
-**Problem 8 (GQA Backward Pass)**: This is a bonus implementation challenge. Since it involves implementing backward passes.
-
 ###  Test Output
 
 The autograder compares your implementation against mathematically correct reference implementations and provides detailed feedback:
@@ -182,6 +174,16 @@ Triton (Flash)            | 0.2424               | 0.0157
 ----------------------------------------------------------------------
 Triton is 43.94x faster than PyTorch (Naive).
 Triton uses 191.54x less memory.
+```
+
+*** Example output for Problem 8+9: ***
+```
+--- Running Autograder for Problem 9: GQA + SWDA + Attention Sinks Backward Pass ---
+Running test case: batch=1, heads_q=16, heads_kv=1, seq_len=4096, dim=16, window_size=256, sink_size=4
+✅ Forward Pass Results match
+✅ Backward Pass Results match on dQ
+✅ Backward Pass Results match on dK
+✅ Backward Pass Results match on dV
 ```
 
 ## Essential Resources

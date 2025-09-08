@@ -2,6 +2,7 @@ import torch
 import triton
 import triton.language as tl
 import math
+from typing import Optional
 
 @triton.jit
 def _flash_attention_forward_swa_kernel(
@@ -111,21 +112,14 @@ class FlashSWDAWithSink(torch.autograd.Function):
         window_size = ctx.window_size
         sink_size = ctx.sink_size
 
-        assert do.is_contiguous()
-
         batch, n_q_heads, seq_len, head_dim = q.shape
         n_kv_heads = k.shape[1]
 
         dq = torch.empty_like(q)
-        dk = torch.zeros_like(k, dtype=torch.float32)
-        dv = torch.zeros_like(v, dtype=torch.float32)
-
-        # Set up grid for the new q-centric backward kernel
-        BLOCK_M, BLOCK_N = 64, 32
-        grid_bwd = (math.ceil(seq_len / BLOCK_M), batch * n_q_heads)
+        dk = torch.zeros_like(k)
+        dv = torch.zeros_like(v)
         
         # TODO: Add your backward kernel here
-        raise NotImplementedError("Backward kernel is left as an exercise for students!")
 
         return dq, dk.to(k.dtype), dv.to(v.dtype), None, None, None, None
     
