@@ -231,6 +231,9 @@ def _flash_attention_forward_swa_kernel(
         m_local = s_ij.max(axis=-1)
         m_new = tl.where(m_local > m_i, m_local, m_i)
 
+        # Create a safe version of m_new to prevent -inf - (-inf)
+        m_new = tl.where(m_new == -float("inf"), 0.0, m_new)
+
         # 2. Rescale the existing accumulator (`acc`) and denominator (`l_i`).
         scale_factor = tl.exp2(m_i - m_new)
         l_scaled = l_i * scale_factor
