@@ -103,8 +103,8 @@ def flash_attention_forward(q, k, v, is_causal=True, window_size=128):
     BLOCK_M, BLOCK_N = 128, 64
     grid = (triton.cdiv(seq_len, BLOCK_M), batch * n_q_heads)
 
-    if window_size != 4096:
-        raise ValueError("This kernel is compiled for a fixed window size of 4096")
+    # if window_size != 4096:
+    #     raise ValueError("This kernel is compiled for a fixed window size of 4096")
 
     _flash_attention_forward_swa_kernel[grid](
         q, k, v, o,
