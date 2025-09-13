@@ -46,12 +46,18 @@ When adding sink tokens to SWA, I initially made a conceptual error. I incorrect
 The key learning here is that while sink tokens can be attended to by all subsequent tokens, **they themselves must still adhere to the causal mask**. A sink token at position `i` cannot attend to any token at position `j > i`. My final implementation correctly combines the sink mask with the causal mask to enforce this rule.
 
 
-## Problem 8: Not Finished and Some Lessons
+## Problem 8: The FlashAttention Backward Pass - A Deeper Dive
 
-I spent maybe way too much time trying to derive the flash attention backward with all the jacobians by hand (I didn't want to cheat and look at the paper implementation). Overall it has been a good exercise. However I have decided to not yet implement coz I don't understand the concent of delta that is mentioned in the comments on the code. After looking at the flash attention paper I realized that it helps calculating dS from dP but without materalizing the full Jacobian. However, I am still not very clear how it avoids that so I will spend some more time with pen and paper before I go ahead and implement this.
+Implementing the backward pass for FlashAttention presented a significant theoretical challenge. My goal was to derive the gradients from first principles before consulting the paper's implementation.
 
+The core difficulty lies in efficiently computing the gradient `dS` from `dP` (where `dP = dO @ V.T`) without materializing the large `(N, N)` Jacobian of the softmax function. The FlashAttention paper introduces a crucial optimization using an intermediate term `D`, where `D_i` is the sum of the `i`-th row of the element-wise product of `dP` and `P`.
+
+The block-wise update for the gradient `dS` is expressed as:
+
+```
 dS( 𝑗) 𝑖 = P ( 𝑗) 𝑖 ◦ (dP( 𝑗) 𝑖 − 𝐷𝑖)
+```
 
-is the line that I didn't fully grasp.
+While I grasp that this step is key to the algorithm's memory efficiency, the precise derivation and how it avoids computing the full Jacobian requires further study.
 
-Hopefully I can submit this later and still claim the bonus points as promised by Dr. Thang Luong :P
+Therefore, I have decided to pause the implementation to solidify my theoretical understanding. I will revisit this problem after a more thorough review of the underlying mathematics.
