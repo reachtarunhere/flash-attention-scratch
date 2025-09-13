@@ -1,0 +1,20 @@
+
+--- Running Autograder for Problem 5: Grouped-Query Attention ---
+✅ P5 Correctness Test Passed! (B=1, Hq=8, Hkv=2, L=512, D=16)
+✅ P5 Correctness Test Passed! (B=1, Hq=8, Hkv=2, L=1024, D=16)
+✅ P5 Correctness Test Passed! (B=1, Hq=16, Hkv=2, L=2048, D=16)
+✅ P5 Correctness Test Passed! (B=1, Hq=16, Hkv=2, L=4096, D=16)
+
+All P5 correctness tests passed!
+
+--- Running Performance Benchmark ---
+Benchmark Config: B=1, Hq=16, Hkv=2, L=4096, D=16, Causal=True
+
+--- Benchmark Results ---
+Implementation            | Avg Time (ms)        | Peak Memory (GB)    
+----------------------------------------------------------------------
+PyTorch (Naive)           | 30.3017              | 3.0323              
+Triton (Flash)            | 0.1569               | 0.0123              
+----------------------------------------------------------------------
+Triton is 193.12x faster than PyTorch (Naive).
+Triton uses 245.95x less memory.

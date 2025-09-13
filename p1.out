@@ -1,0 +1,8 @@
+
+--- Running Autograder for Problem 1: Tiled Flash Attention ---
+✅ P1 Correctness Test Passed! (B=1, H=8, Nq=512, Nk=512, D=16, Causal=False)
+✅ P1 Correctness Test Passed! (B=1, H=8, Nq=1024, Nk=1024, D=16, Causal=True)
+✅ P1 Correctness Test Passed! (B=1, H=16, Nq=2048, Nk=2048, D=16, Causal=True)
+✅ P1 Correctness Test Passed! (B=1, H=16, Nq=4096, Nk=4096, D=16, Causal=True)
+
+All P1 correctness tests passed!

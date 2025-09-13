@@ -1,0 +1,17 @@
+
+--- Running Autograder for Problem 8: GQA Backward Pass ---
+Running test case: batch=1, heads_q=16, heads_kv=16, seq_len=4096, dim=16
+✅ Forward Pass Results match
+❌ Backward Pass Results do not match on dQ
+❌ Backward Pass Results do not match on dK
+❌ Backward Pass Results do not match on dV
+Running test case: batch=1, heads_q=16, heads_kv=8, seq_len=4096, dim=16
+✅ Forward Pass Results match
+❌ Backward Pass Results do not match on dQ
+❌ Backward Pass Results do not match on dK
+❌ Backward Pass Results do not match on dV
+Running test case: batch=1, heads_q=16, heads_kv=1, seq_len=4096, dim=16
+✅ Forward Pass Results match
+❌ Backward Pass Results do not match on dQ
+❌ Backward Pass Results do not match on dK
+❌ Backward Pass Results do not match on dV

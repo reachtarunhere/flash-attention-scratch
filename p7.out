@@ -1,0 +1,20 @@
+
+--- Running Autograder for Problem 7: Attention Sinks ---
+✅ P7 Correctness Test Passed! (B=1, Hq=8, Hkv=2, L=512, D=32, W=128, S=8)
+✅ P7 Correctness Test Passed! (B=1, Hq=8, Hkv=2, L=1024, D=32, W=128, S=8)
+✅ P7 Correctness Test Passed! (B=1, Hq=16, Hkv=2, L=2048, D=16, W=128, S=8)
+✅ P7 Correctness Test Passed! (B=1, Hq=16, Hkv=2, L=4096, D=16, W=128, S=8)
+
+All P7 correctness tests passed!
+
+--- Running Performance Benchmark ---
+Benchmark Config: B=1, Hq=16, Hkv=2, L=4096, D=16, W=128, S=8, Causal=True
+
+--- Benchmark Results ---
+Implementation            | Avg Time (ms)        | Peak Memory (GB)    
+----------------------------------------------------------------------
+PyTorch (Naive)           | 30.1748              | 3.0323              
+Triton (Flash)            | 0.0465               | 0.0123              
+----------------------------------------------------------------------
+Triton is 648.87x faster than PyTorch (Naive).
+Triton uses 245.95x less memory.

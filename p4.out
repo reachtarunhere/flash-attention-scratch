@@ -1,0 +1,20 @@
+
+--- Running Autograder for Problem 4: Causal Flash Attention ---
+✅ P4 Correctness Test Passed! (B=1, H=8, L=512, D=16)
+✅ P4 Correctness Test Passed! (B=1, H=8, L=1024, D=16)
+✅ P4 Correctness Test Passed! (B=1, H=16, L=2048, D=16)
+✅ P4 Correctness Test Passed! (B=1, H=16, L=4096, D=16)
+
+All P4 correctness tests passed!
+
+--- Running Performance Benchmark ---
+Benchmark Config: B=1, H=16, L=4096, D=16, Causal=True
+
+--- Benchmark Results ---
+Implementation            | Avg Time (ms)        | Peak Memory (GB)    
+----------------------------------------------------------------------
+PyTorch (Naive)           | 30.2802              | 3.0319              
+Triton (Flash)            | 0.1591               | 0.0157              
+----------------------------------------------------------------------
+Triton is 190.37x faster than PyTorch (Naive).
+Triton uses 192.53x less memory.

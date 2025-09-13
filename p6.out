@@ -1,0 +1,20 @@
+
+--- Running Autograder for Problem 6: Sliding Window Attention ---
+✅ P6 Correctness Test Passed! (B=1, Hq=8, Hkv=2, L=512, D=16, W=128)
+✅ P6 Correctness Test Passed! (B=1, Hq=8, Hkv=2, L=1024, D=16, W=128)
+✅ P6 Correctness Test Passed! (B=1, Hq=16, Hkv=2, L=2048, D=16, W=128)
+✅ P6 Correctness Test Passed! (B=1, Hq=16, Hkv=2, L=4096, D=16, W=128)
+
+All P6 correctness tests passed!
+
+--- Running Performance Benchmark ---
+Benchmark Config: B=1, Hq=16, Hkv=2, L=4096, D=16, W=128, Causal=True
+
+--- Benchmark Results ---
+Implementation            | Avg Time (ms)        | Peak Memory (GB)    
+----------------------------------------------------------------------
+PyTorch (Naive)           | 30.1749              | 3.0323              
+Triton (Flash)            | 0.0437               | 0.0123              
+----------------------------------------------------------------------
+Triton is 691.03x faster than PyTorch (Naive).
+Triton uses 245.95x less memory.

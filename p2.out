@@ -1,0 +1,8 @@
+
+--- Running Autograder for Problem 2: Triton Weighted Row-Sum ---
+✅ P2 Correctness Test Passed! (Rows=512, Cols=1024)
+✅ P2 Correctness Test Passed! (Rows=1024, Cols=4096)
+✅ P2 Correctness Test Passed! (Rows=2048, Cols=8192)
+✅ P2 Correctness Test Passed! (Rows=4096, Cols=8192)
+
+All P2 correctness tests passed!
