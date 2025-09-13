@@ -1,29 +1,46 @@
-# What I learnt
+# Learnings from Implementing FlashAttention Variants
 
-Problem 1
-I first tried to derive the updates myself without reading the given flashattention pseudocode. What I was doing in my head was adjusting both the maximum and the l_i and then trying to calculate o updates by doing o * old_denominator/new_denominator. The actual algorithm does this normalization only towards the end. My intution was wait that is too late and maybe things will overflow but they actually don't.
+This document outlines the key insights and challenges encountered during the implementation of various attention mechanisms, from a basic PyTorch version to advanced Triton kernels.
 
-Problem 3
-Porting to triton wasn't so hard but i had to cast p_ij to bfloat16 when doing the accumlation for o. Clearly this kernel might break on super old gpus that don't support that. I should probably lookup how to detect if the GPU supports the architecture then select float16 or bloat16
+## Problem 1: PyTorch Tiled Attention - Online Softmax
 
-Problem 4
-First multiphase kernel. But the more important thing was that k and v blocks were not loaded for me. So i tried to not cheat and look at the previous problem and load myself. Added tons of comments to make sure shape and everything is correct. You can read them in the code.
+My initial attempt to implement the online softmax update for FlashAttention differed from the paper's algorithm. I tried to re-normalize the output `o` at each step by scaling it with the ratio of the old and new normalization denominators (`l_i`).
 
-Problem 5
-Easy stuff no issues.
+My intuition was that delaying the normalization until the end of the inner loop would risk numerical overflow. However, I learned that the FlashAttention algorithm is carefully designed to maintain numerical stability. The running maximum `m_i` is subtracted before the `exp` operation, which keeps the intermediate values in a safe range, preventing overflow. The final normalization is sufficient and more efficient.
 
-Problem 6
-This was interesting because I realized that window_size and block_sizes don't have to be fully aligned which might require more complex masking. This could create problems with some parts just before the diagonal.
+## Problem 3: Porting to Triton
 
-I tried to make the kernel more robust by handling it here
+Porting the forward pass to Triton was a relatively smooth process. A key implementation detail was casting the `p_ij` matrix to `bfloat16` before accumulating into the output `o`.
 
-    # what happens if the window size is not a multiple of block size???
-    # the below code handles it in absence of it we will not start at block boundaries and end up
-    # skipping parts of the block just before the diagonal
-    unaligned_window_start = tl.maximum(0, q_block_idx * BLOCK_M - WINDOW_SIZE)
-    window_start = (unaligned_window_start // BLOCK_N) * BLOCK_N
+This choice highlights a trade-off:
+*   **Performance:** `bfloat16` offers significant performance gains on modern GPUs that support it.
+*   **Portability:** The kernel will fail on older hardware that lacks `bfloat16` support.
 
+A more robust implementation would dynamically check for hardware capabilities (e.g., via `torch.cuda.is_bf16_supported()`) and select either `bfloat16` or `float16` accordingly.
 
-Problem 7
+## Problem 4: Causal Masking in Triton
 
-I initally made the mistake of not taking care of the causal mask when I implemented the sinks. Important point because sinks are not supposed to behave like prefix lm masks.
+This was my first experience with a multi-phase Triton kernel. The template for this problem required me to implement the loading of `K` and `V` blocks myself, which proved to be a valuable exercise. It forced me to pay close attention to block pointer arithmetic and ensuring that tensor shapes and strides were correctly handled within the kernel, reinforcing my understanding of how Triton interacts with memory.
+
+## Problem 5: Grouped-Query Attention (GQA)
+
+Implementing GQA was a straightforward extension of the standard attention kernel. The core logic remained the same, with the only change being the mapping of multiple query heads to a single key/value head. This was achieved by adjusting the head indexing for the `K` and `V` tensors while keeping the `Q` head indexing unchanged.
+
+## Problem 6: Sliding Window Attention (SWA) and Block Alignment
+
+A subtle challenge in implementing SWA arose when the `window_size` was not an even multiple of the kernel's `BLOCK_SIZE`. A naive calculation of the window's start position for each block could misalign with the block boundaries, causing the kernel to skip over valid tokens just before the causal diagonal.
+
+To address this, I implemented a more robust calculation for the window's starting position:
+
+```python
+# Handle cases where window_size is not a multiple of block size
+unaligned_window_start = tl.maximum(0, q_block_idx * BLOCK_M - WINDOW_SIZE)
+window_start = (unaligned_window_start // BLOCK_N) * BLOCK_N
+```
+This ensures that the window start is always aligned to a block boundary, preventing any tokens from being missed.
+
+## Problem 7: SWA with Sinks and Causal Masking
+
+When adding sink tokens to SWA, I initially made a conceptual error. I incorrectly assumed that sink tokens were exempt from causal masking entirely, similar to a prefix-LM mask.
+
+The key learning here is that while sink tokens can be attended to by all subsequent tokens, **they themselves must still adhere to the causal mask**. A sink token at position `i` cannot attend to any token at position `j > i`. My final implementation correctly combines the sink mask with the causal mask to enforce this rule.
