@@ -4,6 +4,7 @@ import triton
 import triton.language as tl
 import math
 from typing import Optional
+from causal_forward_kernel import _flash_attention_forward_gqa_kernel
 
 class FlashAttention2Function(torch.autograd.Function):
     """
@@ -27,6 +28,35 @@ class FlashAttention2Function(torch.autograd.Function):
         grid = (triton.cdiv(seq_len, BLOCK_M), batch * n_heads)
         
         # TODO: Add your forward kernel here
+        # we need to change the forward kernel to also support saving M which is L in flash attention paper
+
+        _flash_attention_forward_gqa_kernel[grid](
+        q,
+        k,
+        v,
+        o,
+        M,
+        q.stride(0),
+        q.stride(1),
+        q.stride(2),
+        k.stride(0),
+        k.stride(1),
+        k.stride(2),
+        v.stride(0),
+        v.stride(1),
+        v.stride(2),
+        M.stride(0),
+        M.stride(1),
+        M.stride(2),        
+        softmax_scale,
+        seq_len,
+        n_heads,
+        n_kv_heads,
+        HEAD_DIM=head_dim,
+        BLOCK_M=BLOCK_M,
+        BLOCK_N=BLOCK_N,
+        )
+        
 
         ctx.save_for_backward(q, k, v, o, M)
         ctx.softmax_scale = softmax_scale
