@@ -61,3 +61,5 @@ dS( 𝑗) 𝑖 = P ( 𝑗) 𝑖 ◦ (dP( 𝑗) 𝑖 − 𝐷𝑖)
 While I grasp that this step is key to the algorithm's memory efficiency, the precise derivation and how it avoids computing the full Jacobian requires further study.
 
 Therefore, I have decided to pause the implementation to solidify my theoretical understanding. I will revisit this problem after a more thorough review of the underlying mathematics.
+
+Hopefully I can submit this later and still claim the bonus points as promised by Dr. Thang Luong :P
