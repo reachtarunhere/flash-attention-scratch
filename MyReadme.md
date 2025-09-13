@@ -44,3 +44,14 @@ This ensures that the window start is always aligned to a block boundary, preven
 When adding sink tokens to SWA, I initially made a conceptual error. I incorrectly assumed that sink tokens were exempt from causal masking entirely, similar to a prefix-LM mask.
 
 The key learning here is that while sink tokens can be attended to by all subsequent tokens, **they themselves must still adhere to the causal mask**. A sink token at position `i` cannot attend to any token at position `j > i`. My final implementation correctly combines the sink mask with the causal mask to enforce this rule.
+
+
+## Problem 8: Not Finished and Some Lessons
+
+I spent maybe way too much time trying to derive the flash attention backward with all the jacobians by hand (I didn't want to cheat and look at the paper implementation). Overall it has been a good exercise. However I have decided to not yet implement coz I don't understand the concent of delta that is mentioned in the comments on the code. After looking at the flash attention paper I realized that it helps calculating dS from dP but without materalizing the full Jacobian. However, I am still not very clear how it avoids that so I will spend some more time with pen and paper before I go ahead and implement this.
+
+dS( 𝑗) 𝑖 = P ( 𝑗) 𝑖 ◦ (dP( 𝑗) 𝑖 − 𝐷𝑖)
+
+is the line that I didn't fully grasp.
+
+Hopefully I can submit this later and still claim the bonus points as promised by Dr. Thang Luong :P
